@@ -7,7 +7,7 @@ set -e
 websites='
 website.filecoin.io
 website.protocol.ai
-website.ipfs.io
+ipfs.io
 cluster.ipfs.io
 js.ipfs.io
 libp2p.io
@@ -34,20 +34,22 @@ maps.ipfs.io
 dev.peerpad.net
 flipchart.peerpad.net
 project-repos.ipfs.io
-dev.share.ipfs.io
 '
-
-websites='dev.share.ipfs.io'
 
 ipfs-cluster-ctl $@ pin ls > pinset.txt
 
 for s in $websites; do
-    oldpin=`grep "$s" pinset.txt | cut -d ' ' -f 1`
+    oldcid=`grep "| $s |" pinset.txt | cut -d ' ' -f 1`
+    newcid=$(basename `ipfs resolve -r "/ipns/$s"`) # remove /ipfs prefix
+    if [[ "$oldcid" == "$newcid" ]]; then
+        echo "$s already pinned in latest version"
+        continue
+    fi
     echo "pinning $s"
-    newpin=`ipfs-cluster-ctl $@ pin add --no-status --name "$s" "/ipns/$s" | cut -d ' ' -f 1`
-    if [[ -n "$oldpin" && ("$newpin" != "$oldpin") ]]; then
-        echo "unpinning old version: $oldpin"
-        ipfs-cluster-ctl $@ pin rm --no-status "$oldpin" >/dev/null
+    ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
+    if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
+        echo "unpinning old version: $oldcid"
+        ipfs-cluster-ctl $@ pin rm --no-status "$oldcid"
     fi
 done
-rm pinset.txt
+#rm pinset.txt
