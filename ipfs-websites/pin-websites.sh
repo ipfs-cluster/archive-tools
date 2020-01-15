@@ -34,6 +34,7 @@ maps.ipfs.io
 dev.peerpad.net
 flipchart.peerpad.net
 project-repos.ipfs.io
+dnslink.io
 '
 
 ipfs-cluster-ctl $@ pin ls > pinset.txt
