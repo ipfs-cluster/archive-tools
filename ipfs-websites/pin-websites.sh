@@ -45,7 +45,7 @@ for s in $websites; do
         echo "already pinned in latest version: $s"
         continue
     fi
-    echo "pinning $s"
+    echo "pinning: $s"
     ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
     if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
         echo "unpinning old version: $oldcid"
