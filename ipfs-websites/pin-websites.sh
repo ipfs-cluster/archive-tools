@@ -42,7 +42,7 @@ for s in $websites; do
     oldcid=`grep "| $s |" pinset.txt | cut -d ' ' -f 1`
     newcid=$(basename `ipfs resolve -r "/ipns/$s"`) # remove /ipfs prefix
     if [[ "$oldcid" == "$newcid" ]]; then
-        echo "$s already pinned in latest version"
+        echo "already pinned in latest version: $s"
         continue
     fi
     echo "pinning $s"
