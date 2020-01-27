@@ -15,6 +15,7 @@ multiformats.io
 saftproject.com
 blog.ipfs.io
 docs.ipfs.io
+docs-beta.ipfs.io
 docs.libp2p.io
 webui.ipfs.io
 awesome.ipfs.io
