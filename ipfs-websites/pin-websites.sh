@@ -39,17 +39,21 @@ dnslink.io
 ipfs-cluster-ctl $@ pin ls > pinset.txt
 
 for s in $websites; do
-    oldcid=`grep "| $s |" pinset.txt | cut -d ' ' -f 1`
+    oldcids=`grep "| $s |" pinset.txt | cut -d ' ' -f 1`
     newcid=$(basename `ipfs resolve -r "/ipns/$s"`) # remove /ipfs prefix
-    if [[ "$oldcid" == "$newcid" ]]; then
-        echo "already pinned in latest version: $s"
-        continue
-    fi
-    echo "pinning: $s"
-    ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
-    if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
-        echo "unpinning old version: $oldcid"
-        ipfs-cluster-ctl $@ pin rm --no-status "$oldcid"
-    fi
+    pinned=no
+    for oldcid in $oldcids; do
+        if [[ "$oldcid" == "$newcid" || "$pinned" == "yes" ]]; then
+            echo "already pinned in latest version: $s"
+        else 
+            echo "pinning: $s"
+            ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
+            pinned=yes
+        fi
+        if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
+            echo "unpinning old version: $oldcid"
+            ipfs-cluster-ctl $@ pin rm --no-status "$oldcid"
+        fi
+    done
 done
 #rm pinset.txt
