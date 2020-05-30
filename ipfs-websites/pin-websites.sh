@@ -52,7 +52,7 @@ for s in $websites; do
         fi
         if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
             echo "unpinning old version after 48h: $oldcid"
-            ipfs-cluster-ctl $@ pin add --expire-in '172800s' --no-status --name "${s}-outdated-$(date --utc -Iseconds)" "$oldcid"
+            ipfs-cluster-ctl $@ pin add --expire-in '48h' --no-status --name "${s}-outdated-$(date --utc -Iseconds)" "$oldcid"
         fi
     done
 done
