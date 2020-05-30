@@ -36,7 +36,7 @@ project-repos.ipfs.io
 dnslink.io
 '
 
-ipfs-cluster-ctl $@ pin ls > pinset.txt
+ipfs-cluster-ctl $@ pin ls | grep -v -e '-outdated-' > pinset.txt
 
 for s in $websites; do
     oldcids=`grep "| $s |" pinset.txt | cut -d ' ' -f 1`
@@ -51,8 +51,8 @@ for s in $websites; do
             pinned=yes
         fi
         if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
-            echo "unpinning old version: $oldcid"
-            ipfs-cluster-ctl $@ pin rm --no-status "$oldcid"
+            echo "unpinning old version after 48h: $oldcid"
+            ipfs-cluster-ctl $@ pin add --expire-in '48h' --no-status --name "${s}-outdated-$(date --utc -Iseconds)" "$oldcid"
         fi
     done
 done
