@@ -42,7 +42,7 @@ exec 3>"$pinset_file"
 # remove temp file after this script ends
 trap "rm -f $pinset_file" 0 2 3 15
 
-ipfs-cluster-ctl "$@" pin ls >&3
+ipfs-cluster-ctl $@ pin ls >&3
 
 for s in $websites; do
     oldcids=$(grep "| $s |" $pinset_file | cut -d ' ' -f 1)
@@ -55,12 +55,12 @@ for s in $websites; do
             echo "already pinned in latest version: $s"
         else
             echo "pinning: $s"
-            ipfs-cluster-ctl "$@" pin add --no-status --name "$s" "$newcid"
+            ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
             pinned=yes
         fi
         if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
             echo "unpinning old version: $oldcid"
-            ipfs-cluster-ctl "$@" pin rm --no-status "$oldcid"
+            ipfs-cluster-ctl $@ pin rm --no-status "$oldcid"
         fi
     done
 done
