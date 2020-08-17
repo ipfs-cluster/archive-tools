@@ -27,8 +27,6 @@ benchmark-js.ipfs.io
 cid.ipfs.io
 dag.ipfs.io
 blocks.ipfs.io
-chat.ipfs.io
-dweb-primer.ipfs.io
 igis.io
 dev.peerpad.net
 flipchart.peerpad.net
