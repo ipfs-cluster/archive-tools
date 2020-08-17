@@ -36,16 +36,24 @@ project-repos.ipfs.io
 dnslink.io
 '
 
-ipfs-cluster-ctl $@ pin ls > pinset.txt
+pinset_file=$(mktemp "$(basename $0).XXXXXXXXXX" --tmpdir)
+# open a file descriptor for writing
+exec 3>"$pinset_file"
+# remove temp file after this script ends
+trap "rm -f $pinset_file" 0 2 3 15
+
+ipfs-cluster-ctl $@ pin ls >&3
 
 for s in $websites; do
-    oldcids=`grep "| $s |" pinset.txt | cut -d ' ' -f 1`
-    newcid=$(basename `ipfs resolve -r "/ipns/$s"`) # remove /ipfs prefix
+    oldcids=$(grep "| $s |" $pinset_file | cut -d ' ' -f 1)
+    newcid=$(ipfs resolve -r "/ipns/$s")
+    # remove /ipfs prefix
+    newcid=$(basename $newcid)
     pinned=no
     for oldcid in $oldcids; do
         if [[ "$oldcid" == "$newcid" || "$pinned" == "yes" ]]; then
             echo "already pinned in latest version: $s"
-        else 
+        else
             echo "pinning: $s"
             ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
             pinned=yes
@@ -56,4 +64,3 @@ for s in $websites; do
         fi
     done
 done
-#rm pinset.txt
