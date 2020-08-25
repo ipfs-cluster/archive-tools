@@ -7,6 +7,7 @@ set -e
 websites='
 website.filecoin.io
 website.protocol.ai
+research.protocol.ai
 ipfs.io
 cluster.ipfs.io
 js.ipfs.io
