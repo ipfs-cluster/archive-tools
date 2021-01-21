@@ -4,7 +4,7 @@
 
 set -e
 
-websites='
+websites=(
 website.filecoin.io
 website.protocol.ai
 research.protocol.ai
@@ -33,33 +33,38 @@ dev.peerpad.net
 flipchart.peerpad.net
 project-repos.ipfs.io
 dnslink.io
-'
+)
 
-pinset_file=$(mktemp "$(basename $0).XXXXXXXXXX" --tmpdir)
-# open a file descriptor for writing
-exec 3>"$pinset_file"
+pinset_file="$(mktemp "$(basename "$0").XXXXXXXXXX" --tmpdir)"
+ipfs-cluster-ctl "$@" pin ls >"$pinset_file"
 # remove temp file after this script ends
-trap "rm -f $pinset_file" 0 2 3 15
+trap 'rm -f "$pinset_file"' EXIT
 
-ipfs-cluster-ctl $@ pin ls >&3
+for s in "${websites[@]}"; do
+    declare -A oldcids
+    while read -r oldcid; do
+        oldcids["$oldcid"]=1
+    done < <(grep "| $s |" "$pinset_file" | cut -d ' ' -f 1)
+    newcid="$(ipfs resolve -r "/ipns/$s")" || {
+        echo "failed resolving $s"
+        continue
+    }
+    newcid="${newcid#/ipfs/}" # remove /ipfs/ prefix
 
-for s in $websites; do
-    oldcids=$(grep "| $s |" $pinset_file | cut -d ' ' -f 1)
-    newcid=$(ipfs resolve -r "/ipns/$s")
-    # remove /ipfs prefix
-    newcid=$(basename $newcid)
-    pinned=no
-    for oldcid in $oldcids; do
-        if [[ "$oldcid" == "$newcid" || "$pinned" == "yes" ]]; then
-            echo "already pinned in latest version: $s"
-        else
-            echo "pinning: $s"
-            ipfs-cluster-ctl $@ pin add --no-status --name "$s" "$newcid"
-            pinned=yes
+    if [[ -z "${oldcids["$newcid"]}" ]]; then
+        echo "pinning: $s"
+        ipfs-cluster-ctl "$@" pin add --no-status --name "$s" "$newcid"
+    else
+        echo "already pinned in latest version: $s"
+    fi
+
+    for oldcid in "${!oldcids[@]}"; do
+        if [[ "$oldcid" == "$newcid" ]]; then
+            continue
         fi
-        if [[ -n "$oldcid" && ("$newcid" != "$oldcid") ]]; then
-            echo "unpinning old version: $oldcid"
-            ipfs-cluster-ctl $@ pin rm --no-status "$oldcid"
-        fi
+        echo "unpinning old version of $s: $oldcid"
+        ipfs-cluster-ctl "$@" pin rm --no-status "$oldcid"
     done
+
+    unset -v oldcids
 done
